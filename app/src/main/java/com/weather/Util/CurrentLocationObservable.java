@@ -1,14 +1,19 @@
 package com.weather.Util;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.weather.bhanvisangar.weather.Manifest;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -19,6 +24,7 @@ public class CurrentLocationObservable implements GoogleApiClient.ConnectionCall
     Context context;
     GoogleApiClient googleApiClient;
     Subscriber<? super Location> subscriber;
+
 
     public static Observable<Location> create(Context context) {
         return Observable.create(new CurrentLocationObservable(context));
@@ -41,7 +47,8 @@ public class CurrentLocationObservable implements GoogleApiClient.ConnectionCall
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        Location location = getUserLocation();
+
         if (location != null) {
             subscriber.onNext(location);
             subscriber.onCompleted();
@@ -66,5 +73,12 @@ public class CurrentLocationObservable implements GoogleApiClient.ConnectionCall
         googleApiClient.disconnect();
     }
 
+    private Location getUserLocation() {
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            return LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        } else {
+            return null;
+        }
+    }
 
 }
